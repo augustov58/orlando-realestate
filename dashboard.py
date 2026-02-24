@@ -599,6 +599,8 @@ def main():
         (filtered['sqft'] > 0)
     ].copy()
     
+    st.caption(f"📊 Showing {len(scatter_data)} properties on chart (click legend items to show/hide cities)")
+    
     if len(scatter_data) > 0:
         # Custom hover text
         scatter_data['hover_text'] = scatter_data.apply(
@@ -651,12 +653,23 @@ def main():
             ))
         
         fig.update_layout(
-            height=400,
-            margin=dict(l=10, r=10, t=30, b=60),
+            height=500,
+            margin=dict(l=10, r=10, t=30, b=80),
             template=plotly_template,
-            legend=dict(orientation="h", yanchor="top", y=-0.15, xanchor="center", x=0.5),
-            title="💰 Price vs Size (⭐ = In-Law Suite)"
+            legend=dict(
+                orientation="h", 
+                yanchor="top", 
+                y=-0.12, 
+                xanchor="center", 
+                x=0.5,
+                itemclick="toggle",  # Click to toggle visibility
+                itemdoubleclick="toggleothers",  # Double-click to isolate
+            ),
+            title="💰 Price vs Size (⭐ = In-Law Suite) - Click legend to filter cities"
         )
+        
+        # Ensure all traces are visible by default
+        fig.update_traces(visible=True)
         
         scatter_data = scatter_data.reset_index(drop=True)
         selected_point = st.plotly_chart(fig, use_container_width=True, on_select="rerun", key="main_scatter")
