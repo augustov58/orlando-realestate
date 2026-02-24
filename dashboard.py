@@ -775,55 +775,47 @@ def main():
     display_df = search_filtered[display_cols].copy()
     
     display_df['has_inlaw_suite'] = display_df['has_inlaw_suite'].apply(lambda x: "👴" if x else "")
-    display_df['is_favorite'] = display_df['is_favorite'].apply(lambda x: "❤️" if x else "🤍")
     
-    display_df.columns = ['Fav', 'Floor Plan', 'Builder', 'Community', 'City', 'Price', 
+    display_df.columns = ['Favorite', 'Floor Plan', 'Builder', 'Community', 'City', 'Price', 
                           'Sqft', 'BR', 'BA', 'In-Law', 'Monthly', 'URL', 'prop_id']
     
-    display_df = display_df.sort_values('Price')
+    display_df = display_df.sort_values('Price').reset_index(drop=True)
     
-    # Display table with selection
-    st.dataframe(
+    # Use data_editor for clickable favorites
+    st.caption("💡 **Click the checkbox in the ❤️ column to favorite/unfavorite a property**")
+    
+    edited_df = st.data_editor(
         display_df.drop(columns=['prop_id']),
         column_config={
-            "Fav": st.column_config.TextColumn("❤️", width="small"),
+            "Favorite": st.column_config.CheckboxColumn("❤️", default=False, width="small"),
             "Price": st.column_config.NumberColumn("Price", format="$%,.0f"),
             "Sqft": st.column_config.NumberColumn("Sqft", format="%,.0f"),
             "Monthly": st.column_config.NumberColumn("Est. Monthly", format="$%,.0f"),
             "URL": st.column_config.LinkColumn("Link", display_text="View →"),
+            "Floor Plan": st.column_config.TextColumn("Floor Plan", width="medium"),
+            "Builder": st.column_config.TextColumn("Builder", width="small"),
+            "Community": st.column_config.TextColumn("Community", width="medium"),
+            "City": st.column_config.TextColumn("City", width="small"),
         },
+        disabled=['Floor Plan', 'Builder', 'Community', 'City', 'Price', 'Sqft', 'BR', 'BA', 'In-Law', 'Monthly', 'URL'],
         hide_index=True,
         use_container_width=True,
-        height=400
+        height=400,
+        key="property_table"
     )
     
-    # Favorite toggle section
-    st.subheader("Toggle Favorites")
-    st.caption("Select a property to add/remove from favorites")
-    
-    # Create selectbox with property options
-    prop_options = display_df[['Floor Plan', 'Community', 'City', 'Price', 'prop_id']].copy()
-    prop_options['label'] = prop_options.apply(
-        lambda r: f"{r['Floor Plan']} @ {r['Community']} ({r['City']}) - ${r['Price']:,.0f}", axis=1
-    )
-    
-    fav_col1, fav_col2 = st.columns([3, 1])
-    with fav_col1:
-        selected_prop = st.selectbox(
-            "Select Property",
-            options=prop_options['prop_id'].tolist(),
-            format_func=lambda x: prop_options[prop_options['prop_id'] == x]['label'].iloc[0] if len(prop_options[prop_options['prop_id'] == x]) > 0 else x,
-            key="fav_selector"
-        )
-    with fav_col2:
-        if selected_prop:
-            is_fav = selected_prop in st.session_state.favorites
-            if st.button("❤️ Remove" if is_fav else "🤍 Add to Favorites", key="fav_toggle"):
-                if is_fav:
-                    st.session_state.favorites.discard(selected_prop)
-                else:
-                    st.session_state.favorites.add(selected_prop)
-                st.rerun()
+    # Sync favorites from edited dataframe
+    if edited_df is not None:
+        # Get the prop_ids for comparison
+        edited_with_ids = edited_df.copy()
+        edited_with_ids['prop_id'] = display_df['prop_id'].values
+        
+        # Update favorites based on checkbox state
+        new_favorites = set(edited_with_ids[edited_with_ids['Favorite'] == True]['prop_id'].tolist())
+        
+        if new_favorites != st.session_state.favorites:
+            st.session_state.favorites = new_favorites
+            st.rerun()
     
     # Top Picks Section
     st.header("⭐ Top Picks")
