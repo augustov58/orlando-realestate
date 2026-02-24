@@ -599,7 +599,33 @@ def main():
         (filtered['sqft'] > 0)
     ].copy()
     
-    st.caption(f"📊 Showing {len(scatter_data)} properties on chart (click legend items to show/hide cities)")
+    # Add prop_id for highlighting
+    scatter_data['prop_id'] = scatter_data.apply(lambda r: f"{r['community_name']}|{r['name']}", axis=1)
+    
+    # Property highlighter
+    highlight_col1, highlight_col2 = st.columns([3, 1])
+    with highlight_col1:
+        prop_options = ["None"] + scatter_data.apply(
+            lambda r: f"{r['name']} @ {r['community_name']} ({r['city']}) - ${r['current_price']:,.0f}", 
+            axis=1
+        ).tolist()
+        highlight_selection = st.selectbox(
+            "🎯 Highlight Property on Chart", 
+            options=prop_options,
+            key="highlight_prop"
+        )
+    with highlight_col2:
+        st.caption(f"📊 {len(scatter_data)} properties")
+    
+    # Determine which property to highlight
+    highlighted_idx = None
+    if highlight_selection != "None":
+        # Find the index of the selected property
+        for idx, row in scatter_data.iterrows():
+            label = f"{row['name']} @ {row['community_name']} ({row['city']}) - ${row['current_price']:,.0f}"
+            if label == highlight_selection:
+                highlighted_idx = idx
+                break
     
     if len(scatter_data) > 0:
         # Custom hover text
@@ -670,6 +696,39 @@ def main():
         
         # Ensure all traces are visible by default
         fig.update_traces(visible=True)
+        
+        # Highlight selected property
+        if highlighted_idx is not None and highlighted_idx in scatter_data.index:
+            hl_row = scatter_data.loc[highlighted_idx]
+            # Add a highlighted marker
+            fig.add_trace(go.Scatter(
+                x=[hl_row['sqft']],
+                y=[hl_row['current_price']],
+                mode='markers+text',
+                marker=dict(size=25, color='yellow', symbol='star', line=dict(width=3, color='red')),
+                text=[f"⭐ {hl_row['name']}"],
+                textposition='top center',
+                textfont=dict(size=12, color='yellow'),
+                name='Selected',
+                showlegend=False,
+                hoverinfo='skip'
+            ))
+            # Add annotation
+            fig.add_annotation(
+                x=hl_row['sqft'],
+                y=hl_row['current_price'],
+                text=f"<b>{hl_row['name']}</b><br>{hl_row['community_name']}<br>${hl_row['current_price']:,.0f}",
+                showarrow=True,
+                arrowhead=2,
+                arrowsize=1,
+                arrowwidth=2,
+                arrowcolor='yellow',
+                font=dict(size=11, color='white'),
+                bgcolor='rgba(0,0,0,0.7)',
+                bordercolor='yellow',
+                borderwidth=2,
+                borderpad=4,
+            )
         
         scatter_data = scatter_data.reset_index(drop=True)
         selected_point = st.plotly_chart(fig, use_container_width=True, on_select="rerun", key="main_scatter")
