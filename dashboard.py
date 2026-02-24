@@ -6,24 +6,138 @@ Run with: streamlit run dashboard.py
 """
 
 import streamlit as st
-import pandas as pd
-import numpy as np
-import plotly.express as px
-import plotly.graph_objects as go
-from pathlib import Path
-import sys
 
-# Add scripts to path
-sys.path.insert(0, str(Path(__file__).parent / 'scripts'))
-from db import get_all_listings, get_communities, get_active_incentives, get_stats, get_db
-
-# Page config
+# Page config MUST be first Streamlit command
 st.set_page_config(
     page_title="🏠 Orlando Real Estate",
     page_icon="🏠",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
+
+import pandas as pd
+import numpy as np
+import plotly.express as px
+import plotly.graph_objects as go
+from pathlib import Path
+import sys
+import sqlite3
+
+# Add scripts to path
+APP_DIR = Path(__file__).parent
+sys.path.insert(0, str(APP_DIR / 'scripts'))
+
+# Import db module with error handling
+try:
+    from db import get_all_listings, get_communities, get_active_incentives, get_stats, get_db, init_db, add_community, add_property_type, add_incentive, get_community_by_name
+    # Ensure database is initialized
+    init_db()
+except Exception as e:
+    st.error(f"Database initialization error: {e}")
+    st.stop()
+
+# Populate sample data if database is empty
+def populate_sample_data():
+    """Add sample Lennar data if database is empty"""
+    stats = get_stats()
+    if stats.get('communities', 0) > 0:
+        return  # Already has data
+    
+    # Sample Lennar communities
+    sample_data = [
+        {"community": "Hamilton Bluff", "city": "Haines City", "url": "https://www.lennar.com/new-homes/florida/orlando/haines-city/hamilton-bluff",
+         "properties": [
+             {"name": "Freedom", "beds": 4, "baths": 3, "sqft": 2109, "price": 348990},
+             {"name": "Celeste", "beds": 4, "baths": 2, "sqft": 1824, "price": 269990},
+         ]},
+        {"community": "Groves at Grenelefe", "city": "Haines City", "url": "https://www.lennar.com/new-homes/florida/orlando/haines-city/groves-at-grenelefe",
+         "properties": [
+             {"name": "Jagger", "beds": 4, "baths": 3, "sqft": 2692, "price": 369999},
+             {"name": "Walsh", "beds": 4, "baths": 2, "sqft": 1875, "price": 294999},
+         ]},
+        {"community": "Ranches at Lake McLeod", "city": "Eagle Lake", "url": "https://www.lennar.com/new-homes/florida/orlando/eagle-lake/ranches-at-lake-mcleod",
+         "properties": [
+             {"name": "Eclipse", "beds": 5, "baths": 3, "sqft": 2451, "price": 310740},
+             {"name": "Bravo", "beds": 4, "baths": 3, "sqft": 2205, "price": 329240},
+         ]},
+        {"community": "Hunt Club Groves", "city": "Lake Wales", "url": "https://www.lennar.com/new-homes/florida/orlando/lake-wales/hunt-club-groves",
+         "properties": [
+             {"name": "Jefferson", "beds": 6, "baths": 3, "sqft": 2463, "price": 299240},
+             {"name": "Edison", "beds": 5, "baths": 2.5, "sqft": 2112, "price": 285740},
+             {"name": "Celeste", "beds": 4, "baths": 2, "sqft": 1824, "price": 283240},
+         ]},
+        {"community": "Villa Mar", "city": "Winter Haven", "url": "https://www.lennar.com/new-homes/florida/orlando/winter-haven/villa-mar",
+         "properties": [
+             {"name": "Edison", "beds": 5, "baths": 2.5, "sqft": 2112, "price": 284990},
+             {"name": "Columbus", "beds": 4, "baths": 2.5, "sqft": 1874, "price": 279990},
+         ]},
+        {"community": "Wynnstone", "city": "Davenport", "url": "https://www.lennar.com/new-homes/florida/orlando/davenport/wynnstone",
+         "properties": [
+             {"name": "Edison", "beds": 5, "baths": 2.5, "sqft": 2112, "price": 380990},
+             {"name": "Eclipse", "beds": 5, "baths": 3, "sqft": 2451, "price": 393990},
+         ]},
+        {"community": "Crosswinds", "city": "Haines City", "url": "https://www.lennar.com/new-homes/florida/orlando/haines-city/crosswinds",
+         "properties": [
+             {"name": "Edison", "beds": 5, "baths": 2.5, "sqft": 2112, "price": 321990},
+         ]},
+        {"community": "Pine Meadows", "city": "Eustis", "url": "https://www.lennar.com/new-homes/florida/orlando/eustis/pine-meadows",
+         "properties": [
+             {"name": "Dawn", "beds": 4, "baths": 3, "sqft": 2174, "price": 333900},
+             {"name": "Celeste", "beds": 4, "baths": 2, "sqft": 1824, "price": 313900},
+         ]},
+        {"community": "Westview", "city": "Kissimmee", "url": "https://www.lennar.com/new-homes/florida/orlando/kissimmee/westview",
+         "properties": [
+             {"name": "Dawn", "beds": 4, "baths": 3, "sqft": 2174, "price": 374780},
+         ]},
+        {"community": "Sugarloaf Ridge", "city": "Minneola", "url": "https://www.lennar.com/new-homes/florida/orlando/minneola/sugarloaf-ridge",
+         "properties": [
+             {"name": "Lucia", "beds": 4, "baths": 3.5, "sqft": 2183, "price": 458490},
+             {"name": "Santo", "beds": 5, "baths": 3, "sqft": 2601, "price": 489490},
+             {"name": "Capri", "beds": 4, "baths": 2.5, "sqft": 2081, "price": 465490},
+             {"name": "Jagger", "beds": 4, "baths": 3, "sqft": 2692, "price": 533490},
+         ]},
+        {"community": "Bridgewalk", "city": "Saint Cloud", "url": "https://www.lennar.com/new-homes/florida/orlando/saint-cloud/bridgewalk",
+         "properties": [
+             {"name": "Aspen", "beds": 4, "baths": 3, "sqft": 2199, "price": 480990},
+             {"name": "Freedom", "beds": 4, "baths": 3, "sqft": 2109, "price": 502990},
+         ]},
+        {"community": "Rivington", "city": "Debary", "url": "https://www.lennar.com/new-homes/florida/orlando/debary/rivington",
+         "properties": [
+             {"name": "Aspen", "beds": 4, "baths": 3, "sqft": 2199, "price": 470990},
+         ]},
+        {"community": "Meadow Pointe", "city": "Groveland", "url": "https://www.lennar.com/new-homes/florida/orlando/groveland/meadow-pointe",
+         "properties": [
+             {"name": "Lakewood", "beds": 4, "baths": 3.5, "sqft": 2911, "price": 510900},
+         ]},
+        {"community": "Wellness Ridge", "city": "Clermont", "url": "https://www.lennar.com/new-homes/florida/orlando/clermont/wellness-ridge",
+         "properties": [
+             {"name": "Delray", "beds": 5, "baths": 3, "sqft": 2455, "price": 517140},
+         ]},
+        {"community": "Providence", "city": "Davenport", "url": "https://www.lennar.com/new-homes/florida/orlando/davenport/providence",
+         "properties": [
+             {"name": "Riviera", "beds": 4, "baths": 3, "sqft": 2650, "price": 542990},
+         ]},
+    ]
+    
+    for data in sample_data:
+        cid = add_community(name=data["community"], builder="Lennar", city=data["city"], url=data["url"])
+        if cid < 0:
+            existing = get_community_by_name(data["community"], "Lennar")
+            cid = existing["id"] if existing else None
+        if cid:
+            for prop in data["properties"]:
+                add_property_type(community_id=cid, name=prop["name"], bedrooms=prop["beds"],
+                                  bathrooms=prop["baths"], sqft=prop["sqft"], current_price=prop["price"],
+                                  url=data["url"])
+    
+    # Add Lennar incentive
+    add_incentive(builder="Lennar", type="combo", description="Rate buydown + closing costs with Lennar Mortgage",
+                  rate_buydown="5.99% for 30yr fixed", rate_after_buydown=5.99, closing_credit=10000,
+                  terms="Must use Lennar Mortgage. On select move-in ready homes.", lender_required="Lennar Mortgage",
+                  expires_at="2026-03-31", source_url="https://www.lennar.com")
+
+# Run sample data population
+populate_sample_data()
 
 # Mobile-friendly CSS
 st.markdown("""
