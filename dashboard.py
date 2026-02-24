@@ -22,19 +22,23 @@ import plotly.graph_objects as go
 from pathlib import Path
 import sys
 import sqlite3
+import traceback
 
 # Add scripts to path
 APP_DIR = Path(__file__).parent
 sys.path.insert(0, str(APP_DIR / 'scripts'))
 
 # Import db module with error handling
+DB_AVAILABLE = False
 try:
     from db import get_all_listings, get_communities, get_active_incentives, get_stats, get_db, init_db, add_community, add_property_type, add_incentive, get_community_by_name
     # Ensure database is initialized
     init_db()
+    DB_AVAILABLE = True
 except Exception as e:
     st.error(f"Database initialization error: {e}")
-    st.stop()
+    st.code(traceback.format_exc())
+    # Continue without database - show empty state
 
 # Populate sample data if database is empty
 def populate_sample_data():
@@ -137,7 +141,11 @@ def populate_sample_data():
                   expires_at="2026-03-31", source_url="https://www.lennar.com")
 
 # Run sample data population
-populate_sample_data()
+if DB_AVAILABLE:
+    try:
+        populate_sample_data()
+    except Exception as e:
+        st.warning(f"Could not populate sample data: {e}")
 
 # Mobile-friendly CSS
 st.markdown("""
@@ -216,6 +224,7 @@ def calculate_total_monthly(price, rate, hoa=0, tax_rate=0.0095, insurance_rate=
     insurance = (price * insurance_rate) / 12
     return pi + hoa + taxes + insurance
 
+@st.cache_data(ttl=300)
 @st.cache_data(ttl=300)
 def load_data():
     """Load listings from database"""
@@ -628,5 +637,10 @@ def main():
         st.cache_data.clear()
         st.rerun()
 
-if __name__ == "__main__":
+# Run the app
+if DB_AVAILABLE:
     main()
+else:
+    st.title("🏠 Orlando New Construction Dashboard")
+    st.error("Database not available. Please check the logs.")
+    st.info("The dashboard will show data once the database is properly initialized.")
