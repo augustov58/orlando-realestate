@@ -560,17 +560,18 @@ def main():
             scatter_data,
             x='sqft',
             y='current_price',
-            color='builder',
+            color='city',
             symbol='has_inlaw_suite',
             symbol_map={0: 'circle', 1: 'star'},
-            custom_data=['url', 'community_name', 'city', 'monthly_payment'],
+            custom_data=['url', 'community_name', 'city', 'monthly_payment', 'builder'],
             hover_data={
                 'sqft': ':,.0f',
                 'current_price': ':$,.0f',
+                'city': True,
                 'builder': True,
                 'has_inlaw_suite': False
             },
-            labels={'sqft': 'Square Feet', 'current_price': 'Price (USD)', 'builder': 'Builder'}
+            labels={'sqft': 'Square Feet', 'current_price': 'Price (USD)', 'city': 'Location'}
         )
         
         fig.update_traces(marker=dict(size=12, line=dict(width=1, color='white')))
