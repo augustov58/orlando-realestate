@@ -358,6 +358,10 @@ def main():
     incentives = load_incentives()
     stats = get_stats()
     
+    # Initialize favorites in session state
+    if 'favorites' not in st.session_state:
+        st.session_state.favorites = set()
+    
     # Sidebar
     if 'dark_mode' not in st.session_state:
         st.session_state.dark_mode = True
@@ -398,6 +402,14 @@ def main():
     # In-law suite filter
     inlaw_only = st.sidebar.checkbox("🏠👴 In-Law Suite Only", False)
     
+    # Favorites filter
+    st.sidebar.markdown("---")
+    st.sidebar.subheader(f"❤️ Favorites ({len(st.session_state.favorites)})")
+    favorites_only = st.sidebar.checkbox("Show Favorites Only", False)
+    if st.sidebar.button("Clear All Favorites"):
+        st.session_state.favorites = set()
+        st.rerun()
+    
     # Payment calculator inputs
     st.sidebar.markdown("---")
     st.sidebar.subheader("💳 Payment Calculator")
@@ -420,6 +432,12 @@ def main():
         
         if inlaw_only:
             filtered = filtered[filtered['has_inlaw_suite'] == 1]
+        
+        # Filter by favorites
+        if favorites_only and len(st.session_state.favorites) > 0:
+            # Create unique ID for each property
+            filtered['prop_id'] = filtered.apply(lambda r: f"{r['community_name']}|{r['name']}", axis=1)
+            filtered = filtered[filtered['prop_id'].isin(st.session_state.favorites)]
         
         # Calculate monthly payments
         filtered['monthly_payment'] = filtered.apply(
@@ -729,7 +747,11 @@ def main():
     # Properties Table
     st.header("🏠 Properties")
     
-    search_query = st.text_input("🔍 Search", placeholder="Search by name, builder, community, city...")
+    search_col, fav_info_col = st.columns([3, 1])
+    with search_col:
+        search_query = st.text_input("🔍 Search", placeholder="Search by name, builder, community, city...")
+    with fav_info_col:
+        st.metric("❤️ Favorites", len(st.session_state.favorites))
     
     search_filtered = filtered.copy()
     if search_query:
@@ -742,21 +764,29 @@ def main():
         ]
         st.caption(f"Showing {len(search_filtered)} of {len(filtered)} properties")
     
+    # Add property IDs for favorites
+    search_filtered = search_filtered.copy()
+    search_filtered['prop_id'] = search_filtered.apply(lambda r: f"{r['community_name']}|{r['name']}", axis=1)
+    search_filtered['is_favorite'] = search_filtered['prop_id'].isin(st.session_state.favorites)
+    
     # Prepare display
-    display_cols = ['name', 'builder', 'community_name', 'city', 'current_price', 
-                    'sqft', 'bedrooms', 'bathrooms', 'has_inlaw_suite', 'monthly_payment', 'url']
+    display_cols = ['is_favorite', 'name', 'builder', 'community_name', 'city', 'current_price', 
+                    'sqft', 'bedrooms', 'bathrooms', 'has_inlaw_suite', 'monthly_payment', 'url', 'prop_id']
     display_df = search_filtered[display_cols].copy()
     
     display_df['has_inlaw_suite'] = display_df['has_inlaw_suite'].apply(lambda x: "👴" if x else "")
+    display_df['is_favorite'] = display_df['is_favorite'].apply(lambda x: "❤️" if x else "🤍")
     
-    display_df.columns = ['Floor Plan', 'Builder', 'Community', 'City', 'Price', 
-                          'Sqft', 'BR', 'BA', 'In-Law', 'Monthly', 'URL']
+    display_df.columns = ['Fav', 'Floor Plan', 'Builder', 'Community', 'City', 'Price', 
+                          'Sqft', 'BR', 'BA', 'In-Law', 'Monthly', 'URL', 'prop_id']
     
     display_df = display_df.sort_values('Price')
     
+    # Display table with selection
     st.dataframe(
-        display_df,
+        display_df.drop(columns=['prop_id']),
         column_config={
+            "Fav": st.column_config.TextColumn("❤️", width="small"),
             "Price": st.column_config.NumberColumn("Price", format="$%,.0f"),
             "Sqft": st.column_config.NumberColumn("Sqft", format="%,.0f"),
             "Monthly": st.column_config.NumberColumn("Est. Monthly", format="$%,.0f"),
@@ -766,6 +796,34 @@ def main():
         use_container_width=True,
         height=400
     )
+    
+    # Favorite toggle section
+    st.subheader("Toggle Favorites")
+    st.caption("Select a property to add/remove from favorites")
+    
+    # Create selectbox with property options
+    prop_options = display_df[['Floor Plan', 'Community', 'City', 'Price', 'prop_id']].copy()
+    prop_options['label'] = prop_options.apply(
+        lambda r: f"{r['Floor Plan']} @ {r['Community']} ({r['City']}) - ${r['Price']:,.0f}", axis=1
+    )
+    
+    fav_col1, fav_col2 = st.columns([3, 1])
+    with fav_col1:
+        selected_prop = st.selectbox(
+            "Select Property",
+            options=prop_options['prop_id'].tolist(),
+            format_func=lambda x: prop_options[prop_options['prop_id'] == x]['label'].iloc[0] if len(prop_options[prop_options['prop_id'] == x]) > 0 else x,
+            key="fav_selector"
+        )
+    with fav_col2:
+        if selected_prop:
+            is_fav = selected_prop in st.session_state.favorites
+            if st.button("❤️ Remove" if is_fav else "🤍 Add to Favorites", key="fav_toggle"):
+                if is_fav:
+                    st.session_state.favorites.discard(selected_prop)
+                else:
+                    st.session_state.favorites.add(selected_prop)
+                st.rerun()
     
     # Top Picks Section
     st.header("⭐ Top Picks")
