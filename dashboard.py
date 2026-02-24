@@ -494,27 +494,39 @@ def main():
     
     # City coordinates for Orlando area
     CITY_COORDS = {
+        # Osceola County
         'Saint Cloud': (28.2489, -81.2812),
+        'St. Cloud': (28.2489, -81.2812),  # Alternate spelling
+        'Kissimmee': (28.2920, -81.4076),
+        'Celebration': (28.3253, -81.5339),
+        'Poinciana': (28.1425, -81.4584),
+        # Polk County
         'Haines City': (28.1142, -81.6179),
         'Eagle Lake': (27.9786, -81.7537),
-        'Clermont': (28.5494, -81.7729),
-        'Minneola': (28.5744, -81.7462),
         'Davenport': (28.1614, -81.6017),
         'Lake Wales': (27.9014, -81.5859),
-        'Groveland': (28.5578, -81.8512),
-        'Kissimmee': (28.2920, -81.4076),
-        'Eustis': (28.8528, -81.6851),
-        'Orlando': (28.5383, -81.3792),
-        'Apopka': (28.6934, -81.5322),
-        'Debary': (28.8831, -81.3239),
         'Winter Haven': (28.0222, -81.7329),
+        'Champions Gate': (28.3075, -81.6209),
+        # Lake County
+        'Clermont': (28.5494, -81.7729),
+        'Minneola': (28.5744, -81.7462),
+        'Groveland': (28.5578, -81.8512),
+        'Eustis': (28.8528, -81.6851),
+        'Mt. Dora': (28.8025, -81.6437),
+        'Mount Dora': (28.8025, -81.6437),
+        # Orange County
+        'Orlando': (28.5383, -81.3792),
+        'Orlando Area': (28.5383, -81.3792),  # Generic KB Home designation
+        'Apopka': (28.6934, -81.5322),
+        'Winter Garden': (28.5653, -81.5862),
+        'Ocoee': (28.5692, -81.5439),
         'Lake Nona': (28.3677, -81.2319),
         'Horizon West': (28.4500, -81.6000),
-        'Winter Garden': (28.5653, -81.5862),
+        # Seminole County
         'Sanford': (28.8128, -81.2694),
-        'Champions Gate': (28.3075, -81.6209),
-        'Celebration': (28.3253, -81.5339),
-        'Ocoee': (28.5692, -81.5439),
+        'Debary': (28.8831, -81.3239),
+        # Volusia County
+        'Ormond Beach': (29.2858, -81.0559),
     }
     
     # Add coordinates to filtered data
