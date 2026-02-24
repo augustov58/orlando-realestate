@@ -61,89 +61,89 @@ def get_lennar_url(city, community, floorplan):
     return f"https://www.lennar.com/new-homes/florida/orlando/{slugify(city)}/{slugify(community)}/{collection}/{slugify(floorplan)}"
 
 def populate_sample_data():
-    """Add sample data if database is empty"""
+    """Add sample data if database is empty - uses real scraped URLs"""
     stats = get_stats()
     if stats.get('communities', 0) > 0:
         return  # Already has data
     
-    # Sample Lennar communities with proper floor plan URLs
-    sample_data = [
+    # Lennar communities with REAL URLs from scraping (Feb 2026)
+    lennar_data = [
         {"community": "Hamilton Bluff", "city": "Haines City",
          "properties": [
-             {"name": "Freedom", "beds": 4, "baths": 3, "sqft": 2109, "price": 348990},
-             {"name": "Celeste", "beds": 4, "baths": 2, "sqft": 1824, "price": 269990},
+             {"name": "Freedom", "beds": 4, "baths": 3, "sqft": 2109, "price": 340990, "url": "https://www.lennar.com/new-homes/florida/orlando/haines-city/hamilton-bluff/estate-key-collection/freedom/26320723702"},
+             {"name": "Celeste", "beds": 4, "baths": 2, "sqft": 1824, "price": 269990, "url": "https://www.lennar.com/new-homes/florida/orlando/haines-city/hamilton-bluff/estate-key-collection/celeste/26320723610"},
          ]},
         {"community": "Groves at Grenelefe", "city": "Haines City",
          "properties": [
-             {"name": "Jagger", "beds": 4, "baths": 3, "sqft": 2692, "price": 369999},
-             {"name": "Walsh", "beds": 4, "baths": 2, "sqft": 1875, "price": 294999},
+             {"name": "Jagger", "beds": 4, "baths": 3, "sqft": 2692, "price": 369999, "url": "https://www.lennar.com/new-homes/florida/orlando/haines-city/groves-at-grenelefe/classic-collection/jagger/26341730002"},
+             {"name": "Walsh", "beds": 4, "baths": 2, "sqft": 1875, "price": 294999, "url": "https://www.lennar.com/new-homes/florida/orlando/haines-city/groves-at-grenelefe/classic-collection/walsh/26341730003"},
          ]},
         {"community": "Ranches at Lake McLeod", "city": "Eagle Lake",
          "properties": [
-             {"name": "Eclipse", "beds": 5, "baths": 3, "sqft": 2451, "price": 310740},
-             {"name": "Bravo", "beds": 4, "baths": 3, "sqft": 2205, "price": 329240},
+             {"name": "Eclipse", "beds": 5, "baths": 3, "sqft": 2451, "price": 310740, "url": "https://www.lennar.com/new-homes/florida/orlando/eagle-lake/ranches-at-lake-mcleod/estate-key-collection/eclipse/26332730591"},
+             {"name": "Bravo", "beds": 4, "baths": 3, "sqft": 2205, "price": 329240, "url": "https://www.lennar.com/new-homes/florida/orlando/eagle-lake/ranches-at-lake-mcleod/executive-key-collection/bravo/11129720574"},
          ]},
         {"community": "Hunt Club Groves", "city": "Lake Wales",
          "properties": [
-             {"name": "Jefferson", "beds": 6, "baths": 3, "sqft": 2463, "price": 299240},
-             {"name": "Edison", "beds": 5, "baths": 2.5, "sqft": 2112, "price": 285740},
-             {"name": "Celeste", "beds": 4, "baths": 2, "sqft": 1824, "price": 283240},
+             {"name": "Jefferson", "beds": 6, "baths": 3, "sqft": 2463, "price": 299240, "url": "https://www.lennar.com/new-homes/florida/orlando/lake-wales/hunt-club-groves/manor-key-collection/jefferson/11161720287"},
+             {"name": "Edison", "beds": 5, "baths": 2.5, "sqft": 2112, "price": 285740, "url": "https://www.lennar.com/new-homes/florida/orlando/lake-wales/hunt-club-groves/manor-key-collection/edison/11161720153"},
+             {"name": "Celeste", "beds": 4, "baths": 2, "sqft": 1824, "price": 283240, "url": "https://www.lennar.com/new-homes/florida/orlando/lake-wales/hunt-club-groves/estate-key-collections/celeste/1116272s007"},
          ]},
         {"community": "Villa Mar", "city": "Winter Haven",
          "properties": [
-             {"name": "Edison", "beds": 5, "baths": 2.5, "sqft": 2112, "price": 284990},
-             {"name": "Columbus", "beds": 4, "baths": 2.5, "sqft": 1874, "price": 279990},
+             {"name": "Edison", "beds": 5, "baths": 2.5, "sqft": 2112, "price": 284990, "url": "https://www.lennar.com/new-homes/florida/orlando/winter-haven/villa-mar/edison/26362720250"},
+             {"name": "Columbus", "beds": 4, "baths": 2.5, "sqft": 1874, "price": 279990, "url": "https://www.lennar.com/new-homes/florida/orlando/winter-haven/villa-mar/columbus/26362720251"},
          ]},
         {"community": "Wynnstone", "city": "Davenport",
          "properties": [
-             {"name": "Edison", "beds": 5, "baths": 2.5, "sqft": 2112, "price": 380990},
-             {"name": "Eclipse", "beds": 5, "baths": 3, "sqft": 2451, "price": 393990},
+             {"name": "Edison", "beds": 5, "baths": 2.5, "sqft": 2112, "price": 380990, "url": "https://www.lennar.com/new-homes/florida/orlando/davenport/wynnstone/manor-key-collection/edison/26315723114"},
+             {"name": "Eclipse", "beds": 5, "baths": 3, "sqft": 2451, "price": 393990, "url": "https://www.lennar.com/new-homes/florida/orlando/davenport/wynnstone/estate-key-collection/eclipse/26316722316"},
          ]},
         {"community": "Crosswinds", "city": "Haines City",
          "properties": [
-             {"name": "Edison", "beds": 5, "baths": 2.5, "sqft": 2112, "price": 321990},
+             {"name": "Edison", "beds": 5, "baths": 2.5, "sqft": 2112, "price": 321990, "url": "https://www.lennar.com/new-homes/florida/orlando/haines-city/crosswinds/manor-key-collection/edison/11135720409"},
          ]},
         {"community": "Pine Meadows", "city": "Eustis",
          "properties": [
-             {"name": "Dawn", "beds": 4, "baths": 3, "sqft": 2174, "price": 333900},
-             {"name": "Celeste", "beds": 4, "baths": 2, "sqft": 1824, "price": 313900},
+             {"name": "Dawn", "beds": 4, "baths": 3, "sqft": 2174, "price": 333900, "url": "https://www.lennar.com/new-homes/florida/orlando/eustis/pine-meadows/estate-key-collection/dawn/26347720314"},
+             {"name": "Celeste", "beds": 4, "baths": 2, "sqft": 1824, "price": 313900, "url": "https://www.lennar.com/new-homes/florida/orlando/eustis/pine-meadows/estate-key-collection/celeste/26347720315"},
          ]},
         {"community": "Westview", "city": "Kissimmee",
          "properties": [
-             {"name": "Dawn", "beds": 4, "baths": 3, "sqft": 2174, "price": 374780},
+             {"name": "Dawn", "beds": 4, "baths": 3, "sqft": 2174, "price": 374780, "url": "https://www.lennar.com/new-homes/florida/orlando/kissimmee/westview/aden-south-key-iii/dawn/26335730381"},
          ]},
         {"community": "Sugarloaf Ridge", "city": "Minneola",
          "properties": [
-             {"name": "Lucia", "beds": 4, "baths": 3.5, "sqft": 2183, "price": 458490},
-             {"name": "Santo", "beds": 5, "baths": 3, "sqft": 2601, "price": 489490},
-             {"name": "Capri", "beds": 4, "baths": 2.5, "sqft": 2081, "price": 465490},
-             {"name": "Jagger", "beds": 4, "baths": 3, "sqft": 2692, "price": 533490},
+             {"name": "Lucia", "beds": 4, "baths": 3.5, "sqft": 2183, "price": 458490, "url": "https://www.lennar.com/new-homes/florida/orlando/minneola/sugarloaf-ridge/eventide-collection/lucia/11183720468"},
+             {"name": "Santo", "beds": 5, "baths": 3, "sqft": 2601, "price": 489490, "url": "https://www.lennar.com/new-homes/florida/orlando/minneola/sugarloaf-ridge/eventide-collection/santo/11183720466"},
+             {"name": "Capri", "beds": 4, "baths": 2.5, "sqft": 2081, "price": 465490, "url": "https://www.lennar.com/new-homes/florida/orlando/minneola/sugarloaf-ridge/eventide-collection/capri/11183720467"},
+             {"name": "Jagger", "beds": 4, "baths": 3, "sqft": 2692, "price": 533490, "url": "https://www.lennar.com/new-homes/florida/orlando/minneola/sugarloaf-ridge/classic-collection/jagger/11184720481"},
          ]},
         {"community": "Bridgewalk", "city": "Saint Cloud",
          "properties": [
-             {"name": "Aspen", "beds": 4, "baths": 3, "sqft": 2199, "price": 480990},
-             {"name": "Freedom", "beds": 4, "baths": 3, "sqft": 2109, "price": 502990},
+             {"name": "Aspen", "beds": 4, "baths": 3, "sqft": 2199, "price": 480990, "url": "https://www.lennar.com/new-homes/florida/orlando/saint-cloud/bridgewalk/estate-collection2/aspen/26302720233"},
+             {"name": "Freedom", "beds": 4, "baths": 3, "sqft": 2109, "price": 502990, "url": "https://www.lennar.com/new-homes/florida/orlando/saint-cloud/bridgewalk/estate-collection2/freedom/26302720028", "nextgen": True},
          ]},
         {"community": "Rivington", "city": "Debary",
          "properties": [
-             {"name": "Aspen", "beds": 4, "baths": 3, "sqft": 2199, "price": 470990},
+             {"name": "Aspen", "beds": 4, "baths": 3, "sqft": 2199, "price": 470990, "url": "https://www.lennar.com/new-homes/florida/orlando/debary/rivington/estate-collection/aspen/26312720682"},
          ]},
         {"community": "Meadow Pointe", "city": "Groveland",
          "properties": [
-             {"name": "Lakewood", "beds": 4, "baths": 3.5, "sqft": 2911, "price": 510900},
+             {"name": "Lakewood", "beds": 4, "baths": 3.5, "sqft": 2911, "price": 510900, "url": "https://www.lennar.com/new-homes/florida/orlando/groveland/meadow-pointe/legacy-collection/lakewood/2636172m053"},
          ]},
         {"community": "Wellness Ridge", "city": "Clermont",
          "properties": [
-             {"name": "Delray", "beds": 5, "baths": 3, "sqft": 2455, "price": 517140},
+             {"name": "Delray", "beds": 5, "baths": 3, "sqft": 2455, "price": 517140, "url": "https://www.lennar.com/new-homes/florida/orlando/clermont/wellness-ridge/manor-collection/delray/11139721000"},
          ]},
         {"community": "Providence", "city": "Davenport",
          "properties": [
-             {"name": "Riviera", "beds": 4, "baths": 3, "sqft": 2650, "price": 542990},
+             {"name": "Riviera", "beds": 4, "baths": 3, "sqft": 2650, "price": 542990, "url": "https://www.lennar.com/new-homes/florida/orlando/davenport/providence/garden-hills-chateau-collection/riviera/11144720541"},
          ]},
     ]
     
-    # Add Lennar communities with proper floor plan URLs
-    for data in sample_data:
+    # Add Lennar communities with real URLs
+    for data in lennar_data:
         community_url = f"https://www.lennar.com/new-homes/florida/orlando/{slugify(data['city'])}/{slugify(data['community'])}"
         cid = add_community(name=data["community"], builder="Lennar", city=data["city"], url=community_url)
         if cid < 0:
@@ -151,10 +151,9 @@ def populate_sample_data():
             cid = existing["id"] if existing else None
         if cid:
             for prop in data["properties"]:
-                floor_plan_url = get_lennar_url(data["city"], data["community"], prop["name"])
                 add_property_type(community_id=cid, name=prop["name"], bedrooms=prop["beds"],
                                   bathrooms=prop["baths"], sqft=prop["sqft"], current_price=prop["price"],
-                                  url=floor_plan_url)
+                                  has_inlaw_suite=prop.get("nextgen", False), url=prop["url"])
     
     # Add Lennar incentive
     add_incentive(builder="Lennar", type="combo", description="Rate buydown + closing costs with Lennar Mortgage",
