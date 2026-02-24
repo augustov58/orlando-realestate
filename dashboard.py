@@ -139,6 +139,69 @@ def populate_sample_data():
                   rate_buydown="5.99% for 30yr fixed", rate_after_buydown=5.99, closing_credit=10000,
                   terms="Must use Lennar Mortgage. On select move-in ready homes.", lender_required="Lennar Mortgage",
                   expires_at="2026-03-31", source_url="https://www.lennar.com")
+    
+    # DR Horton communities
+    dr_horton_data = [
+        {"community": "Astonia", "city": "Davenport", "properties": [
+            {"name": "Bluebell", "beds": 4, "baths": 2, "sqft": 1850, "price": 319990},
+            {"name": "Lantana", "beds": 5, "baths": 3, "sqft": 2580, "price": 389990}]},
+        {"community": "Sunstone", "city": "Sanford", "properties": [
+            {"name": "Columbia", "beds": 4, "baths": 2, "sqft": 1875, "price": 359990},
+            {"name": "Juniper", "beds": 5, "baths": 3, "sqft": 2650, "price": 439990}]},
+        {"community": "Citrus Trails", "city": "Haines City", "properties": [
+            {"name": "Jasmine", "beds": 4, "baths": 2, "sqft": 1750, "price": 289990},
+            {"name": "Willow", "beds": 5, "baths": 3, "sqft": 2400, "price": 359990}]},
+    ]
+    for data in dr_horton_data:
+        cid = add_community(name=data["community"], builder="DR Horton", city=data["city"], url="https://www.drhorton.com")
+        if cid < 0:
+            existing = get_community_by_name(data["community"], "DR Horton")
+            cid = existing["id"] if existing else None
+        if cid:
+            for prop in data["properties"]:
+                add_property_type(community_id=cid, name=prop["name"], bedrooms=prop["beds"],
+                                  bathrooms=prop["baths"], sqft=prop["sqft"], current_price=prop["price"])
+    add_incentive(builder="DR Horton", type="combo", description="$15k closing costs with DHI Mortgage",
+                  closing_credit=15000, rate_buydown="5.75% available", expires_at="2026-03-31")
+    
+    # Meritage Homes
+    meritage_data = [
+        {"community": "Lake Apopka Reserve", "city": "Apopka", "properties": [
+            {"name": "Cholla", "beds": 4, "baths": 2.5, "sqft": 2050, "price": 399900},
+            {"name": "Palo Verde", "beds": 4, "baths": 3, "sqft": 2350, "price": 449900}]},
+        {"community": "Cypress Preserve", "city": "Groveland", "properties": [
+            {"name": "Acacia", "beds": 4, "baths": 2.5, "sqft": 1950, "price": 369900},
+            {"name": "Ironwood", "beds": 5, "baths": 3, "sqft": 2550, "price": 429900}]},
+    ]
+    for data in meritage_data:
+        cid = add_community(name=data["community"], builder="Meritage Homes", city=data["city"], url="https://www.meritagehomes.com")
+        if cid < 0:
+            existing = get_community_by_name(data["community"], "Meritage Homes")
+            cid = existing["id"] if existing else None
+        if cid:
+            for prop in data["properties"]:
+                add_property_type(community_id=cid, name=prop["name"], bedrooms=prop["beds"],
+                                  bathrooms=prop["baths"], sqft=prop["sqft"], current_price=prop["price"])
+    
+    # KB Home
+    kb_data = [
+        {"community": "Lakeshore at Narcoossee", "city": "Saint Cloud", "properties": [
+            {"name": "Plan 1989", "beds": 4, "baths": 2.5, "sqft": 1989, "price": 369990},
+            {"name": "Plan 2668", "beds": 5, "baths": 3, "sqft": 2668, "price": 449990}]},
+        {"community": "Gramercy Farms", "city": "Saint Cloud", "properties": [
+            {"name": "Plan 1707", "beds": 4, "baths": 2, "sqft": 1707, "price": 329990}]},
+    ]
+    for data in kb_data:
+        cid = add_community(name=data["community"], builder="KB Home", city=data["city"], url="https://www.kbhome.com")
+        if cid < 0:
+            existing = get_community_by_name(data["community"], "KB Home")
+            cid = existing["id"] if existing else None
+        if cid:
+            for prop in data["properties"]:
+                add_property_type(community_id=cid, name=prop["name"], bedrooms=prop["beds"],
+                                  bathrooms=prop["baths"], sqft=prop["sqft"], current_price=prop["price"])
+    add_incentive(builder="KB Home", type="combo", description="$10k closing + rate buydown",
+                  closing_credit=10000, rate_buydown="5.99% available", expires_at="2026-03-31")
 
 # Run sample data population
 if DB_AVAILABLE:
@@ -398,6 +461,76 @@ def main():
         3. Track builder incentives as you find them
         """)
         return
+    
+    # Map Section
+    st.header("🗺️ Community Map")
+    
+    # City coordinates for Orlando area
+    CITY_COORDS = {
+        'Saint Cloud': (28.2489, -81.2812),
+        'Haines City': (28.1142, -81.6179),
+        'Eagle Lake': (27.9786, -81.7537),
+        'Clermont': (28.5494, -81.7729),
+        'Minneola': (28.5744, -81.7462),
+        'Davenport': (28.1614, -81.6017),
+        'Lake Wales': (27.9014, -81.5859),
+        'Groveland': (28.5578, -81.8512),
+        'Kissimmee': (28.2920, -81.4076),
+        'Eustis': (28.8528, -81.6851),
+        'Orlando': (28.5383, -81.3792),
+        'Apopka': (28.6934, -81.5322),
+        'Debary': (28.8831, -81.3239),
+        'Winter Haven': (28.0222, -81.7329),
+        'Lake Nona': (28.3677, -81.2319),
+        'Horizon West': (28.4500, -81.6000),
+        'Winter Garden': (28.5653, -81.5862),
+        'Sanford': (28.8128, -81.2694),
+        'Champions Gate': (28.3075, -81.6209),
+        'Celebration': (28.3253, -81.5339),
+        'Ocoee': (28.5692, -81.5439),
+    }
+    
+    # Add coordinates to filtered data
+    map_data = filtered.copy()
+    map_data['lat'] = map_data['city'].map(lambda x: CITY_COORDS.get(x, (28.5, -81.5))[0])
+    map_data['lon'] = map_data['city'].map(lambda x: CITY_COORDS.get(x, (28.5, -81.5))[1])
+    
+    # Add small random offset to prevent overlap
+    np.random.seed(42)
+    map_data['lat'] = map_data['lat'] + np.random.uniform(-0.02, 0.02, len(map_data))
+    map_data['lon'] = map_data['lon'] + np.random.uniform(-0.02, 0.02, len(map_data))
+    
+    if len(map_data) > 0:
+        # Create map with plotly
+        fig_map = px.scatter_mapbox(
+            map_data,
+            lat='lat',
+            lon='lon',
+            color='city',
+            size='current_price',
+            size_max=20,
+            hover_name='name',
+            hover_data={
+                'community_name': True,
+                'builder': True,
+                'current_price': ':$,.0f',
+                'bedrooms': True,
+                'sqft': ':,.0f',
+                'lat': False,
+                'lon': False,
+            },
+            zoom=8,
+            center={'lat': 28.35, 'lon': -81.55},
+            mapbox_style='carto-positron' if not dark_mode else 'carto-darkmatter',
+        )
+        
+        fig_map.update_layout(
+            height=450,
+            margin=dict(l=0, r=0, t=0, b=0),
+            legend=dict(orientation="h", yanchor="top", y=-0.02, xanchor="center", x=0.5, font=dict(size=10)),
+        )
+        
+        st.plotly_chart(fig_map, use_container_width=True)
     
     # Charts Section
     st.header("📈 Market Analysis")
