@@ -118,6 +118,15 @@ def init_db():
             sent_at TEXT DEFAULT CURRENT_TIMESTAMP
         );
         
+        -- Favorites (persistent storage for user favorites)
+        CREATE TABLE IF NOT EXISTS favorites (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            prop_id TEXT NOT NULL UNIQUE,
+            community_name TEXT,
+            property_name TEXT,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        );
+        
         -- Indexes
         CREATE INDEX IF NOT EXISTS idx_communities_builder ON communities(builder);
         CREATE INDEX IF NOT EXISTS idx_communities_city ON communities(city);
@@ -125,6 +134,7 @@ def init_db():
         CREATE INDEX IF NOT EXISTS idx_property_types_price ON property_types(current_price);
         CREATE INDEX IF NOT EXISTS idx_incentives_active ON incentives(is_active);
         CREATE INDEX IF NOT EXISTS idx_incentives_expires ON incentives(expires_at);
+        CREATE INDEX IF NOT EXISTS idx_favorites_prop_id ON favorites(prop_id);
     """)
     conn.commit()
     conn.close()
@@ -451,6 +461,75 @@ def format_property_telegram(prop: dict, include_incentive: bool = True) -> str:
         lines.append(f"🔗 [View Details]({url})")
     
     return '\n'.join(lines)
+
+# Favorites management
+def get_favorites() -> set:
+    """Get all favorite property IDs"""
+    conn = get_db()
+    cursor = conn.execute("SELECT prop_id FROM favorites")
+    favorites = set(row['prop_id'] for row in cursor.fetchall())
+    conn.close()
+    return favorites
+
+def add_favorite(prop_id: str, community_name: str = None, property_name: str = None) -> bool:
+    """Add a property to favorites. Returns True if added, False if already exists."""
+    conn = get_db()
+    try:
+        conn.execute("""
+            INSERT INTO favorites (prop_id, community_name, property_name)
+            VALUES (?, ?, ?)
+        """, (prop_id, community_name, property_name))
+        conn.commit()
+        return True
+    except sqlite3.IntegrityError:
+        return False
+    finally:
+        conn.close()
+
+def remove_favorite(prop_id: str) -> bool:
+    """Remove a property from favorites. Returns True if removed."""
+    conn = get_db()
+    cursor = conn.execute("DELETE FROM favorites WHERE prop_id = ?", (prop_id,))
+    conn.commit()
+    removed = cursor.rowcount > 0
+    conn.close()
+    return removed
+
+def clear_favorites() -> int:
+    """Clear all favorites. Returns count of removed items."""
+    conn = get_db()
+    cursor = conn.execute("DELETE FROM favorites")
+    conn.commit()
+    count = cursor.rowcount
+    conn.close()
+    return count
+
+def sync_favorites(new_favorites: set) -> dict:
+    """Sync favorites with database. Returns dict with added/removed counts."""
+    current = get_favorites()
+    to_add = new_favorites - current
+    to_remove = current - new_favorites
+    
+    conn = get_db()
+    for prop_id in to_add:
+        parts = prop_id.split('|', 1)
+        community_name = parts[0] if len(parts) > 0 else None
+        property_name = parts[1] if len(parts) > 1 else None
+        try:
+            conn.execute("""
+                INSERT INTO favorites (prop_id, community_name, property_name)
+                VALUES (?, ?, ?)
+            """, (prop_id, community_name, property_name))
+        except sqlite3.IntegrityError:
+            pass
+    
+    for prop_id in to_remove:
+        conn.execute("DELETE FROM favorites WHERE prop_id = ?", (prop_id,))
+    
+    conn.commit()
+    conn.close()
+    return {"added": len(to_add), "removed": len(to_remove)}
+
 
 if __name__ == '__main__':
     import sys

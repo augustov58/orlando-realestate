@@ -31,7 +31,9 @@ sys.path.insert(0, str(APP_DIR / 'scripts'))
 # Import db module with error handling
 DB_AVAILABLE = False
 try:
-    from db import get_all_listings, get_communities, get_active_incentives, get_stats, get_db, init_db, add_community, add_property_type, add_incentive, get_community_by_name
+    from db import (get_all_listings, get_communities, get_active_incentives, get_stats, 
+                    get_db, init_db, add_community, add_property_type, add_incentive, 
+                    get_community_by_name, get_favorites, sync_favorites, clear_favorites)
     # Ensure database is initialized
     init_db()
     DB_AVAILABLE = True
@@ -358,9 +360,13 @@ def main():
     incentives = load_incentives()
     stats = get_stats()
     
-    # Initialize favorites in session state
+    # Initialize favorites from database (persistent storage)
     if 'favorites' not in st.session_state:
-        st.session_state.favorites = set()
+        st.session_state.favorites = get_favorites()
+    if 'favorites_loaded' not in st.session_state:
+        # Load from DB on first run
+        st.session_state.favorites = get_favorites()
+        st.session_state.favorites_loaded = True
     
     # Sidebar
     if 'dark_mode' not in st.session_state:
@@ -402,13 +408,15 @@ def main():
     # In-law suite filter
     inlaw_only = st.sidebar.checkbox("🏠👴 In-Law Suite Only", False)
     
-    # Favorites filter
+    # Favorites filter (persistent in database)
     st.sidebar.markdown("---")
     st.sidebar.subheader(f"❤️ Favorites ({len(st.session_state.favorites)})")
     favorites_only = st.sidebar.checkbox("Show Favorites Only", False)
     if st.sidebar.button("Clear All Favorites"):
+        clear_favorites()
         st.session_state.favorites = set()
         st.rerun()
+    st.sidebar.caption("💾 Favorites are saved automatically")
     
     # Payment calculator inputs
     st.sidebar.markdown("---")
@@ -886,6 +894,8 @@ def main():
         new_favorites = set(edited_with_ids[edited_with_ids['Favorite'] == True]['prop_id'].tolist())
         
         if new_favorites != st.session_state.favorites:
+            # Sync to database (persistent storage)
+            sync_favorites(new_favorites)
             st.session_state.favorites = new_favorites
             st.rerun()
     
